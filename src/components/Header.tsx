@@ -1,18 +1,21 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, ShoppingCart } from 'lucide-react';
+import { Menu, X, ShoppingCart, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useCart } from '@/integrations';
+import { useCart, useMember } from '@/integrations';
 import Cart from '@/components/Cart';
+import NotificationCenter from '@/components/NotificationCenter';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const { itemCount, actions } = useCart();
+  const { member, actions: memberActions } = useMember();
 
   const navLinks = [
     { path: '/', label: 'Home' },
     { path: '/pets', label: 'Browse Pets' },
+    { path: '/auctions', label: 'Live Auctions' },
     { path: '/contact', label: 'Contact' }
   ];
 
@@ -50,10 +53,27 @@ export default function Header() {
                   </motion.button>
                 </Link>
               ))}
+              {member && (
+                <Link to="/verify">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`font-paragraph font-medium px-6 py-2 rounded-full transition-all ${
+                      isActive('/verify')
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-secondary hover:bg-brandaccent/30'
+                    }`}
+                  >
+                    Verify
+                  </motion.button>
+                </Link>
+              )}
             </nav>
 
-            {/* Cart & Mobile Menu Toggle */}
+            {/* Cart, Notifications & Mobile Menu Toggle */}
             <div className="flex items-center gap-4">
+              <NotificationCenter />
+              
               <button
                 onClick={actions.toggleCart}
                 className="relative p-2 hover:bg-subtlebackground rounded-full transition-colors"
@@ -65,6 +85,25 @@ export default function Header() {
                   </span>
                 )}
               </button>
+
+              {member ? (
+                <Link to="/profile">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    className="p-2 hover:bg-subtlebackground rounded-full transition-colors"
+                  >
+                    <User className="w-6 h-6 text-secondary" />
+                  </motion.button>
+                </Link>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  onClick={memberActions.login}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-full font-paragraph font-semibold text-sm hover:brightness-110 transition-all"
+                >
+                  Sign In
+                </motion.button>
+              )}
 
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -106,6 +145,22 @@ export default function Header() {
                       </button>
                     </Link>
                   ))}
+                  {member && (
+                    <Link
+                      to="/verify"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <button
+                        className={`w-full font-paragraph font-medium px-6 py-3 rounded-full text-left transition-all ${
+                          isActive('/verify')
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-secondary hover:bg-brandaccent/30'
+                        }`}
+                      >
+                        Verify
+                      </button>
+                    </Link>
+                  )}
                 </div>
               </motion.nav>
             )}

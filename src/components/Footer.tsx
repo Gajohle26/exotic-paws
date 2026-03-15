@@ -37,6 +37,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/auctions" className="font-paragraph text-secondary-foreground/80 hover:text-primary transition-colors">
+                  Live Auctions
+                </Link>
+              </li>
+              <li>
                 <Link to="/contact" className="font-paragraph text-secondary-foreground/80 hover:text-primary transition-colors">
                   Contact Us
                 </Link>

@@ -29,6 +29,83 @@ export interface AdoptionInquiries {
 
 
 /**
+ * Collection ID: auctions
+ * Interface for ExoticPetAuctions
+ */
+export interface ExoticPetAuctions {
+  _id: string;
+  _createdDate?: Date;
+  _updatedDate?: Date;
+  /** @wixFieldType text */
+  petId?: string;
+  /** @wixFieldType text */
+  sellerId?: string;
+  /** @wixFieldType text */
+  auctionTitle?: string;
+  /** @wixFieldType image - Contains image URL, render with <Image> component, NOT as text */
+  petImage?: string;
+  /** @wixFieldType number */
+  startingBid?: number;
+  /** @wixFieldType number */
+  currentBid?: number;
+  /** @wixFieldType text */
+  highestBidderId?: string;
+  /** @wixFieldType datetime */
+  auctionEndTime?: Date | string;
+  /** @wixFieldType text */
+  status?: string;
+  /** @wixFieldType number */
+  durationHours?: number;
+}
+
+
+/**
+ * Collection ID: bids
+ * Interface for Bids
+ */
+export interface Bids {
+  _id: string;
+  _createdDate?: Date;
+  _updatedDate?: Date;
+  /** @wixFieldType text */
+  auctionId?: string;
+  /** @wixFieldType text */
+  bidderId?: string;
+  /** @wixFieldType number */
+  bidAmount?: number;
+  /** @wixFieldType datetime */
+  bidTime?: Date | string;
+  /** @wixFieldType boolean */
+  isWinningBid?: boolean;
+}
+
+
+/**
+ * Collection ID: documentverifications
+ * Interface for DocumentVerifications
+ */
+export interface DocumentVerifications {
+  _id: string;
+  _createdDate?: Date;
+  _updatedDate?: Date;
+  /** @wixFieldType text */
+  userId?: string;
+  /** @wixFieldType text */
+  userType?: string;
+  /** @wixFieldType text */
+  species?: string;
+  /** @wixFieldType url */
+  documentUrl?: string;
+  /** @wixFieldType text */
+  status?: string;
+  /** @wixFieldType datetime */
+  submissionDate?: Date | string;
+  /** @wixFieldType datetime */
+  reviewDate?: Date | string;
+}
+
+
+/**
  * Collection ID: exoticpets
  * @catalog This collection is an eCommerce catalog
  * Interface for ExoticPets
@@ -51,4 +128,27 @@ export interface ExoticPets {
   careRequirements?: string;
   /** @wixFieldType text */
   approximateLocation?: string;
+}
+
+
+/**
+ * Collection ID: notifications
+ * Interface for Notifications
+ */
+export interface Notifications {
+  _id: string;
+  _createdDate?: Date;
+  _updatedDate?: Date;
+  /** @wixFieldType text */
+  userId?: string;
+  /** @wixFieldType text */
+  type?: string;
+  /** @wixFieldType text */
+  message?: string;
+  /** @wixFieldType text */
+  relatedAuctionId?: string;
+  /** @wixFieldType boolean */
+  isRead?: boolean;
+  /** @wixFieldType datetime */
+  createdDate?: Date | string;
 }

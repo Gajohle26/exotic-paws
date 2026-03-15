@@ -2,10 +2,15 @@ import { MemberProvider } from '@/integrations';
 import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-router-dom';
 import { ScrollToTop } from '@/lib/scroll-to-top';
 import ErrorPage from '@/integrations/errorHandlers/ErrorPage';
+import { MemberProtectedRoute } from '@/components/ui/member-protected-route';
 import HomePage from '@/components/pages/HomePage';
 import PetsPage from '@/components/pages/PetsPage';
 import PetDetailPage from '@/components/pages/PetDetailPage';
 import ContactPage from '@/components/pages/ContactPage';
+import ProfilePage from '@/components/pages/ProfilePage';
+import AuctionsPage from '@/components/pages/AuctionsPage';
+import AuctionDetailPage from '@/components/pages/AuctionDetailPage';
+import VerificationPage from '@/components/pages/VerificationPage';
 
 // Layout component that includes ScrollToTop
 function Layout() {
@@ -49,6 +54,42 @@ const router = createBrowserRouter([
         element: <ContactPage />,
         routeMetadata: {
           pageIdentifier: 'contact',
+        },
+      },
+      {
+        path: "profile",
+        element: (
+          <MemberProtectedRoute>
+            <ProfilePage />
+          </MemberProtectedRoute>
+        ),
+        routeMetadata: {
+          pageIdentifier: 'profile',
+        },
+      },
+      {
+        path: "auctions",
+        element: <AuctionsPage />,
+        routeMetadata: {
+          pageIdentifier: 'auctions',
+        },
+      },
+      {
+        path: "auctions/:id",
+        element: <AuctionDetailPage />,
+        routeMetadata: {
+          pageIdentifier: 'auction-detail',
+        },
+      },
+      {
+        path: "verify",
+        element: (
+          <MemberProtectedRoute>
+            <VerificationPage />
+          </MemberProtectedRoute>
+        ),
+        routeMetadata: {
+          pageIdentifier: 'verification',
         },
       },
       {
