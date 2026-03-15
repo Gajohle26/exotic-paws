@@ -3,6 +3,7 @@ import { createBrowserRouter, RouterProvider, Navigate, Outlet } from 'react-rou
 import { ScrollToTop } from '@/lib/scroll-to-top';
 import ErrorPage from '@/integrations/errorHandlers/ErrorPage';
 import { MemberProtectedRoute } from '@/components/ui/member-protected-route';
+import { VerificationGate } from '@/components/ui/verification-gate';
 import HomePage from '@/components/pages/HomePage';
 import PetsPage from '@/components/pages/PetsPage';
 import PetDetailPage from '@/components/pages/PetDetailPage';
@@ -37,14 +38,26 @@ const router = createBrowserRouter([
       },
       {
         path: "pets",
-        element: <PetsPage />,
+        element: (
+          <MemberProtectedRoute>
+            <VerificationGate messageToVerify="You must complete document verification to browse pets">
+              <PetsPage />
+            </VerificationGate>
+          </MemberProtectedRoute>
+        ),
         routeMetadata: {
           pageIdentifier: 'pets',
         },
       },
       {
         path: "pets/:id",
-        element: <PetDetailPage />,
+        element: (
+          <MemberProtectedRoute>
+            <VerificationGate messageToVerify="You must complete document verification to view pet details">
+              <PetDetailPage />
+            </VerificationGate>
+          </MemberProtectedRoute>
+        ),
         routeMetadata: {
           pageIdentifier: 'pet-detail',
         },
@@ -69,14 +82,26 @@ const router = createBrowserRouter([
       },
       {
         path: "auctions",
-        element: <AuctionsPage />,
+        element: (
+          <MemberProtectedRoute>
+            <VerificationGate messageToVerify="You must complete document verification to view auctions">
+              <AuctionsPage />
+            </VerificationGate>
+          </MemberProtectedRoute>
+        ),
         routeMetadata: {
           pageIdentifier: 'auctions',
         },
       },
       {
         path: "auctions/:id",
-        element: <AuctionDetailPage />,
+        element: (
+          <MemberProtectedRoute>
+            <VerificationGate messageToVerify="You must complete document verification to view auction details">
+              <AuctionDetailPage />
+            </VerificationGate>
+          </MemberProtectedRoute>
+        ),
         routeMetadata: {
           pageIdentifier: 'auction-detail',
         },
