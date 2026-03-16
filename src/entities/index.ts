@@ -152,3 +152,61 @@ export interface Notifications {
   /** @wixFieldType datetime */
   createdDate?: Date | string;
 }
+
+
+/**
+ * Collection ID: petsubmissions
+ * Interface for PetSubmissions
+ */
+export interface PetSubmissions {
+  _id: string;
+  _createdDate?: Date;
+  _updatedDate?: Date;
+  /** @wixFieldType text */
+  sellerId?: string;
+  /** @wixFieldType text */
+  petName?: string;
+  /** @wixFieldType text */
+  species?: string;
+  /** @wixFieldType image - Contains image URL, render with <Image> component, NOT as text */
+  petImage?: string;
+  /** @wixFieldType text */
+  description?: string;
+  /** @wixFieldType text */
+  careRequirements?: string;
+  /** @wixFieldType text */
+  location?: string;
+  /** @wixFieldType url */
+  legalDocumentUrl?: string;
+  /** @wixFieldType text */
+  submissionStatus?: string;
+  /** @wixFieldType datetime */
+  submissionDate?: Date | string;
+  /** @wixFieldType datetime */
+  reviewDate?: Date | string;
+  /** @wixFieldType text */
+  adminNotes?: string;
+}
+
+
+/**
+ * Collection ID: userpaymentmethods
+ * Interface for UserPaymentMethods
+ */
+export interface UserPaymentMethods {
+  _id: string;
+  _createdDate?: Date;
+  _updatedDate?: Date;
+  /** @wixFieldType text */
+  userId?: string;
+  /** @wixFieldType text */
+  cardholderName?: string;
+  /** @wixFieldType text */
+  cardLastFour?: string;
+  /** @wixFieldType text */
+  cardBrand?: string;
+  /** @wixFieldType boolean */
+  isDefault?: boolean;
+  /** @wixFieldType datetime */
+  createdDate?: Date | string;
+}

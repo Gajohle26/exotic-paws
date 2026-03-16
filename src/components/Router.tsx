@@ -4,6 +4,7 @@ import { ScrollToTop } from '@/lib/scroll-to-top';
 import ErrorPage from '@/integrations/errorHandlers/ErrorPage';
 import { MemberProtectedRoute } from '@/components/ui/member-protected-route';
 import { VerificationGate } from '@/components/ui/verification-gate';
+import { PaymentGate } from '@/components/ui/payment-gate';
 import HomePage from '@/components/pages/HomePage';
 import PetsPage from '@/components/pages/PetsPage';
 import PetDetailPage from '@/components/pages/PetDetailPage';
@@ -12,6 +13,8 @@ import ProfilePage from '@/components/pages/ProfilePage';
 import AuctionsPage from '@/components/pages/AuctionsPage';
 import AuctionDetailPage from '@/components/pages/AuctionDetailPage';
 import VerificationPage from '@/components/pages/VerificationPage';
+import PaymentDetailsPage from '@/components/pages/PaymentDetailsPage';
+import AddPetForAuctionPage from '@/components/pages/AddPetForAuctionPage';
 
 // Layout component that includes ScrollToTop
 function Layout() {
@@ -41,7 +44,9 @@ const router = createBrowserRouter([
         element: (
           <MemberProtectedRoute>
             <VerificationGate messageToVerify="You must complete document verification to browse pets">
-              <PetsPage />
+              <PaymentGate messageToAddPayment="You must add payment details to browse pets">
+                <PetsPage />
+              </PaymentGate>
             </VerificationGate>
           </MemberProtectedRoute>
         ),
@@ -54,7 +59,9 @@ const router = createBrowserRouter([
         element: (
           <MemberProtectedRoute>
             <VerificationGate messageToVerify="You must complete document verification to view pet details">
-              <PetDetailPage />
+              <PaymentGate messageToAddPayment="You must add payment details to view pet details">
+                <PetDetailPage />
+              </PaymentGate>
             </VerificationGate>
           </MemberProtectedRoute>
         ),
@@ -85,7 +92,9 @@ const router = createBrowserRouter([
         element: (
           <MemberProtectedRoute>
             <VerificationGate messageToVerify="You must complete document verification to view auctions">
-              <AuctionsPage />
+              <PaymentGate messageToAddPayment="You must add payment details to view auctions">
+                <AuctionsPage />
+              </PaymentGate>
             </VerificationGate>
           </MemberProtectedRoute>
         ),
@@ -98,7 +107,9 @@ const router = createBrowserRouter([
         element: (
           <MemberProtectedRoute>
             <VerificationGate messageToVerify="You must complete document verification to view auction details">
-              <AuctionDetailPage />
+              <PaymentGate messageToAddPayment="You must add payment details to view auction details">
+                <AuctionDetailPage />
+              </PaymentGate>
             </VerificationGate>
           </MemberProtectedRoute>
         ),
@@ -115,6 +126,34 @@ const router = createBrowserRouter([
         ),
         routeMetadata: {
           pageIdentifier: 'verification',
+        },
+      },
+      {
+        path: "payment",
+        element: (
+          <MemberProtectedRoute>
+            <VerificationGate messageToVerify="You must complete document verification before adding payment details">
+              <PaymentDetailsPage />
+            </VerificationGate>
+          </MemberProtectedRoute>
+        ),
+        routeMetadata: {
+          pageIdentifier: 'payment',
+        },
+      },
+      {
+        path: "add-pet",
+        element: (
+          <MemberProtectedRoute>
+            <VerificationGate messageToVerify="You must complete document verification to add a pet for auction">
+              <PaymentGate messageToAddPayment="You must add payment details to add a pet for auction">
+                <AddPetForAuctionPage />
+              </PaymentGate>
+            </VerificationGate>
+          </MemberProtectedRoute>
+        ),
+        routeMetadata: {
+          pageIdentifier: 'add-pet',
         },
       },
       {

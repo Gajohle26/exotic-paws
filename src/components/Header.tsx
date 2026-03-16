@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, ShoppingCart, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCart, useMember } from '@/integrations';
+import { useVerificationStatus } from '@/hooks/useVerificationStatus';
+import { usePaymentStatus } from '@/hooks/usePaymentStatus';
 import Cart from '@/components/Cart';
 import NotificationCenter from '@/components/NotificationCenter';
 
@@ -11,6 +13,8 @@ export default function Header() {
   const location = useLocation();
   const { itemCount, actions } = useCart();
   const { member, actions: memberActions } = useMember();
+  const { verificationStatus } = useVerificationStatus(member?._id);
+  const { hasPaymentMethod } = usePaymentStatus(member?._id);
 
   const navLinks = [
     { path: '/', label: 'Home' },
@@ -18,6 +22,9 @@ export default function Header() {
     { path: '/auctions', label: 'Live Auctions' },
     { path: '/contact', label: 'Contact' }
   ];
+
+  // Show Add Pet link only if user is verified, has payment method, and is a seller
+  const showAddPetLink = member && verificationStatus === 'approved' && hasPaymentMethod;
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -65,6 +72,21 @@ export default function Header() {
                     }`}
                   >
                     Verify
+                  </motion.button>
+                </Link>
+              )}
+              {showAddPetLink && (
+                <Link to="/add-pet">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`font-paragraph font-medium px-6 py-2 rounded-full transition-all ${
+                      isActive('/add-pet')
+                        ? 'bg-primary text-primary-foreground'
+                        : 'text-secondary hover:bg-brandaccent/30'
+                    }`}
+                  >
+                    Add Pet
                   </motion.button>
                 </Link>
               )}
@@ -158,6 +180,22 @@ export default function Header() {
                         }`}
                       >
                         Verify
+                      </button>
+                    </Link>
+                  )}
+                  {showAddPetLink && (
+                    <Link
+                      to="/add-pet"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <button
+                        className={`w-full font-paragraph font-medium px-6 py-3 rounded-full text-left transition-all ${
+                          isActive('/add-pet')
+                            ? 'bg-primary text-primary-foreground'
+                            : 'text-secondary hover:bg-brandaccent/30'
+                        }`}
+                      >
+                        Add Pet
                       </button>
                     </Link>
                   )}
