@@ -2,9 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
-import { ArrowRight, Shield, MapPin, Search, Scale, FileCheck, Lock, ChevronRight, ShoppingBag } from 'lucide-react';
+import { ArrowRight, Shield, MapPin, Search, Scale, FileCheck, Lock, ChevronRight, ShoppingBag, Clock } from 'lucide-react';
 import { BaseCrudService } from '@/integrations';
-import { ExoticPets } from '@/entities';
+import { ExoticPets, ExoticPetAuctions } from '@/entities';
 import { Image } from '@/components/ui/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -34,7 +34,9 @@ const customStyles = `
 
 export default function HomePage() {
   const [featuredPets, setFeaturedPets] = useState<ExoticPets[]>([]);
+  const [liveAuctions, setLiveAuctions] = useState<ExoticPetAuctions[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [timeRemaining, setTimeRemaining] = useState<{ [key: string]: string }>({});
   const { addingItemId, actions } = useCart();
   const { currency } = useCurrency();
 
@@ -62,13 +64,52 @@ export default function HomePage() {
 
   const loadFeaturedPets = async () => {
     try {
-      const result = await BaseCrudService.getAll<ExoticPets>('exoticpets', {}, { limit: 4 });
-      setFeaturedPets(result.items);
+      const petsResult = await BaseCrudService.getAll<ExoticPets>('exoticpets', {}, { limit: 4 });
+      setFeaturedPets(petsResult.items);
+
+      // Load live auctions
+      const auctionsResult = await BaseCrudService.getAll<ExoticPetAuctions>('auctions', {}, { limit: 4 });
+      const activeAuctions = auctionsResult.items.filter(a => a.status === 'active');
+      setLiveAuctions(activeAuctions);
     } catch (error) {
-      console.error('Failed to load featured pets:', error);
+      console.error('Failed to load featured content:', error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Update time remaining every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newTimeRemaining: { [key: string]: string } = {};
+      liveAuctions.forEach(auction => {
+        newTimeRemaining[auction._id] = getTimeRemaining(auction.auctionEndTime);
+      });
+      setTimeRemaining(newTimeRemaining);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [liveAuctions]);
+
+  const getTimeRemaining = (endTime?: Date | string): string => {
+    let result = 'N/A';
+    
+    if (endTime) {
+      const end = new Date(endTime);
+      const now = new Date();
+      const diff = end.getTime() - now.getTime();
+
+      if (diff <= 0) {
+        result = 'Ended';
+      } else if (diff < 3600000) {
+        result = `${Math.floor(diff / 60000)}m left`;
+      } else if (diff < 86400000) {
+        result = `${Math.floor(diff / 3600000)}h left`;
+      } else {
+        result = `${Math.floor(diff / 86400000)}d left`;
+      }
+    }
+    
+    return result;
   };
 
   return (
@@ -334,8 +375,8 @@ export default function HomePage() {
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <Link to="/pets" className="group inline-flex items-center gap-2 text-secondary font-semibold hover:text-primary transition-colors">
-                View All Listings
+              <Link to="/auctions" className="group inline-flex items-center gap-2 text-secondary font-semibold hover:text-primary transition-colors">
+                View All Auctions
                 <span className="w-8 h-8 rounded-full bg-secondary/5 group-hover:bg-primary/20 flex items-center justify-center transition-colors">
                   <ChevronRight className="w-4 h-4" />
                 </span>
@@ -362,74 +403,52 @@ export default function HomePage() {
                     <div className="h-12 bg-secondary/10 rounded-full w-full mt-6" />
                   </motion.div>
                 ))
-              ) : featuredPets.length > 0 ? (
+              ) : liveAuctions.length > 0 ? (
                 // Actual Data
-                featuredPets.map((pet, index) => (
+                liveAuctions.map((auction, index) => (
                   <motion.div
-                    key={pet._id}
+                    key={auction._id}
                     initial={{ opacity: 0, y: 40 }}
                     whileInView={{ opacity: 1, y: 0 }}
                     viewport={{ once: true, margin: "-50px" }}
                     transition={{ duration: 0.5, delay: index * 0.1 }}
                     className="group bg-white rounded-[2rem] p-4 hover:shadow-2xl hover:shadow-secondary/10 transition-all duration-500 flex flex-col border border-secondary/5"
                   >
-                    <Link to={`/pets/${pet._id}`} className="block relative overflow-hidden rounded-2xl mb-6 aspect-[4/3]">
+                    <Link to={`/auctions/${auction._id}`} className="block relative overflow-hidden rounded-2xl mb-6 aspect-[4/3]">
                       <Image
-                        src={pet.itemImage || 'https://static.wixstatic.com/media/ee3aff_a4c4aeb4817e441b9d3d41817caed13e~mv2.png?originWidth=640&originHeight=448'}
-                        alt={pet.itemName || 'Exotic pet'}
+                        src={auction.petImage || 'https://static.wixstatic.com/media/ee3aff_a4c4aeb4817e441b9d3d41817caed13e~mv2.png?originWidth=640&originHeight=448'}
+                        alt={auction.auctionTitle || 'Auction'}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                       />
-                      <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-xs font-bold text-secondary shadow-sm">
-                        Verified
+                      <div className="absolute top-4 left-4 bg-primary text-primary-foreground font-heading text-sm px-4 py-2 rounded-xl shadow-lg flex items-center gap-2">
+                        <Clock className="w-4 h-4 animate-pulse" />
+                        {timeRemaining[auction._id] || getTimeRemaining(auction.auctionEndTime)}
                       </div>
                       <div className="absolute bottom-4 right-4 bg-secondary text-secondary-foreground font-heading text-lg px-4 py-2 rounded-xl shadow-lg">
-                        {formatPrice(pet.itemPrice || 0, currency ?? DEFAULT_CURRENCY)}
+                        {formatPrice(auction.currentBid || auction.startingBid || 0, currency ?? DEFAULT_CURRENCY)}
                       </div>
                     </Link>
                     
                     <div className="px-2 flex-grow flex flex-col">
                       <div className="flex justify-between items-start mb-2">
                         <h3 className="font-heading text-2xl text-secondary line-clamp-1">
-                          {pet.itemName}
+                          {auction.auctionTitle}
                         </h3>
                       </div>
                       
                       <p className="text-sm text-primary font-semibold mb-3 uppercase tracking-wider">
-                        {pet.species}
+                        Live Auction
                       </p>
                       
                       <p className="text-secondary/60 text-sm line-clamp-2 mb-6 flex-grow">
-                        {pet.itemDescription}
+                        Current bid: {formatPrice(auction.currentBid || auction.startingBid || 0, currency ?? DEFAULT_CURRENCY)}
                       </p>
                       
-                      <div className="flex items-center justify-between mt-auto pt-4 border-t border-secondary/5">
-                        {pet.approximateLocation ? (
-                          <div className="flex items-center gap-1.5 text-xs text-secondary/50">
-                            <MapPin className="w-3.5 h-3.5" />
-                            <span className="truncate max-w-[100px]">{pet.approximateLocation}</span>
-                          </div>
-                        ) : <div />}
-                        
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            actions.addToCart({
-                              collectionId: 'exoticpets',
-                              itemId: pet._id,
-                              quantity: 1
-                            });
-                          }}
-                          disabled={addingItemId === pet._id}
-                          className="w-10 h-10 rounded-full bg-subtlebackground text-secondary flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          aria-label="Add to cart"
-                        >
-                          {addingItemId === pet._id ? (
-                            <div className="w-4 h-4 border-2 border-secondary border-t-transparent rounded-full animate-spin" />
-                          ) : (
-                            <ShoppingBag className="w-4 h-4" />
-                          )}
+                      <Link to={`/auctions/${auction._id}`} className="mt-auto pt-4 border-t border-secondary/5">
+                        <button className="w-full bg-primary text-primary-foreground font-paragraph font-semibold py-3 rounded-full hover:brightness-110 transition-all">
+                          Place Bid
                         </button>
-                      </div>
+                      </Link>
                     </div>
                   </motion.div>
                 ))
@@ -439,8 +458,8 @@ export default function HomePage() {
                   <div className="w-16 h-16 bg-subtlebackground rounded-full flex items-center justify-center mx-auto mb-4 text-secondary/40">
                     <Search className="w-8 h-8" />
                   </div>
-                  <h3 className="font-heading text-2xl text-secondary mb-2">No Active Auctions</h3>
-                  <p className="text-secondary/60">Check back soon for new verified listings.</p>
+                  <h3 className="font-heading text-2xl text-secondary mb-2">No Live Auctions</h3>
+                  <p className="text-secondary/60">Check back soon for new verified auctions.</p>
                 </div>
               )}
             </AnimatePresence>

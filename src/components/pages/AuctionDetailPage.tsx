@@ -1,25 +1,39 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Clock, TrendingUp, Users, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Clock, TrendingUp, Users, AlertCircle, Trophy } from 'lucide-react';
 import { BaseCrudService } from '@/integrations';
-import { Auctions, Bids } from '@/entities';
+import { ExoticPetAuctions, Bids } from '@/entities';
 import { Image } from '@/components/ui/image';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useMember } from '@/integrations';
 import { useCurrency, formatPrice, DEFAULT_CURRENCY } from '@/integrations';
+import PaymentModal, { CardData } from '@/components/PaymentModal';
 
 export default function AuctionDetailPage() {
   const { id } = useParams<{ id: string }>();
   const { member } = useMember();
-  const [auction, setAuction] = useState<Auctions | null>(null);
+  const [auction, setAuction] = useState<ExoticPetAuctions | null>(null);
   const [bids, setBids] = useState<Bids[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [bidAmount, setBidAmount] = useState('');
   const [isPlacingBid, setIsPlacingBid] = useState(false);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [userWinningBid, setUserWinningBid] = useState<Bids | null>(null);
+  const [timeRemaining, setTimeRemaining] = useState<string>('');
   const { currency } = useCurrency();
+
+  // Update time remaining every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (auction?.auctionEndTime) {
+        setTimeRemaining(getTimeRemaining(auction.auctionEndTime));
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [auction?.auctionEndTime]);
 
   useEffect(() => {
     if (id) {
@@ -29,8 +43,9 @@ export default function AuctionDetailPage() {
 
   const loadAuction = async () => {
     try {
-      const data = await BaseCrudService.getById<Auctions>('auctions', id!);
+      const data = await BaseCrudService.getById<ExoticPetAuctions>('auctions', id!);
       setAuction(data);
+      setTimeRemaining(getTimeRemaining(data?.auctionEndTime));
 
       // Load bids for this auction
       const bidsResult = await BaseCrudService.getAll<Bids>('bids', {}, { limit: 50 });
@@ -42,6 +57,12 @@ export default function AuctionDetailPage() {
           return timeB - timeA;
         });
       setBids(auctionBids);
+
+      // Check if current user has a winning bid (only if auction is ended)
+      if (member?._id && data?.status === 'ended') {
+        const userWinningBid = auctionBids.find(b => b.bidderId === member._id && b.isWinningBid);
+        setUserWinningBid(userWinningBid || null);
+      }
     } catch (error) {
       console.error('Failed to load auction:', error);
     } finally {
@@ -60,6 +81,17 @@ export default function AuctionDetailPage() {
 
     setIsPlacingBid(true);
     try {
+      // Mark previous winning bids as non-winning
+      if (bids.length > 0) {
+        const previousWinningBid = bids.find(b => b.isWinningBid);
+        if (previousWinningBid) {
+          await BaseCrudService.update('bids', {
+            _id: previousWinningBid._id,
+            isWinningBid: false
+          });
+        }
+      }
+
       // Create new bid
       const newBid: Bids = {
         _id: crypto.randomUUID(),
@@ -88,6 +120,21 @@ export default function AuctionDetailPage() {
     } finally {
       setIsPlacingBid(false);
     }
+  };
+
+  const handlePaymentSubmit = async (cardData: CardData) => {
+    if (!userWinningBid) {
+      throw new Error('No winning bid found');
+    }
+
+    // Simulate payment processing
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        console.log('Payment processed for:', cardData.cardholderName);
+        alert('Payment successful! Your auction has been secured.');
+        resolve(undefined);
+      }, 2000);
+    });
   };
 
   const getTimeRemaining = (endTime?: Date | string) => {
@@ -167,15 +214,15 @@ export default function AuctionDetailPage() {
                   </p>
                 </div>
 
-                {/* Time Remaining */}
+               {/* Time Remaining */}
                 {auction.status === 'active' && (
                   <div className="mb-6 p-4 bg-primary/10 rounded-2xl border border-primary/20">
                     <div className="flex items-center gap-2 mb-2">
-                      <Clock className="w-5 h-5 text-primary" />
+                      <Clock className="w-5 h-5 text-primary animate-pulse" />
                       <p className="text-sm text-secondary/60">Time Remaining</p>
                     </div>
                     <p className="font-heading text-2xl text-primary">
-                      {getTimeRemaining(auction.auctionEndTime)}
+                      {timeRemaining}
                     </p>
                   </div>
                 )}
@@ -231,6 +278,31 @@ export default function AuctionDetailPage() {
                       This auction has ended
                     </p>
                   </div>
+                )}
+
+                {/* User Winning Bid Section */}
+                {userWinningBid && auction.status === 'ended' && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-6 p-4 bg-green-50 border-2 border-green-300 rounded-2xl"
+                  >
+                    <div className="flex items-center gap-2 mb-3">
+                      <Trophy className="w-5 h-5 text-green-600" />
+                      <p className="font-heading text-lg text-green-800">
+                        You Won This Auction!
+                      </p>
+                    </div>
+                    <p className="text-sm text-green-700 mb-4 font-paragraph">
+                      Congratulations! You have the winning bid. Complete your payment to secure this exotic pet.
+                    </p>
+                    <button
+                      onClick={() => setIsPaymentModalOpen(true)}
+                      className="w-full bg-green-600 text-white font-paragraph font-semibold py-3 rounded-full hover:bg-green-700 transition-all"
+                    >
+                      Complete Payment
+                    </button>
+                  </motion.div>
                 )}
 
                 {/* Payment Notice */}
@@ -299,6 +371,15 @@ export default function AuctionDetailPage() {
       </div>
 
       <Footer />
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        auctionTitle={auction?.auctionTitle}
+        winningAmount={userWinningBid?.bidAmount || 0}
+        onPaymentSubmit={handlePaymentSubmit}
+      />
     </div>
   );
 }

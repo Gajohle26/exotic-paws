@@ -18,9 +18,22 @@ export default function AuctionsPage() {
   const [hasNext, setHasNext] = useState(false);
   const [skip, setSkip] = useState(0);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState<{ [key: string]: string }>({});
   const { currency } = useCurrency();
 
   const LIMIT = 9;
+
+  // Update time remaining every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const newTimeRemaining: { [key: string]: string } = {};
+      auctions.forEach(auction => {
+        newTimeRemaining[auction._id] = getTimeRemaining(auction.auctionEndTime);
+      });
+      setTimeRemaining(newTimeRemaining);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [auctions]);
 
   useEffect(() => {
     loadAuctions();
@@ -187,8 +200,8 @@ export default function AuctionsPage() {
                       </div>
                       {auction.status === 'active' && (
                         <div className="absolute top-4 left-4 bg-primary text-primary-foreground font-paragraph font-bold px-4 py-2 rounded-full flex items-center gap-2">
-                          <Clock className="w-4 h-4" />
-                          {getTimeRemaining(auction.auctionEndTime)}
+                          <Clock className="w-4 h-4 animate-pulse" />
+                          {timeRemaining[auction._id] || getTimeRemaining(auction.auctionEndTime)}
                         </div>
                       )}
                     </div>
