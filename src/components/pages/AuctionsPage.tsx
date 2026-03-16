@@ -3,15 +3,15 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Clock, MapPin, TrendingUp, Search, Filter, ChevronDown } from 'lucide-react';
 import { BaseCrudService } from '@/integrations';
-import { Auctions, ExoticPets } from '@/entities';
+import { ExoticPetAuctions } from '@/entities';
 import { Image } from '@/components/ui/image';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useCurrency, formatPrice, DEFAULT_CURRENCY } from '@/integrations';
 
 export default function AuctionsPage() {
-  const [auctions, setAuctions] = useState<Auctions[]>([]);
-  const [filteredAuctions, setFilteredAuctions] = useState<Auctions[]>([]);
+  const [auctions, setAuctions] = useState<ExoticPetAuctions[]>([]);
+  const [filteredAuctions, setFilteredAuctions] = useState<ExoticPetAuctions[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStatus, setSelectedStatus] = useState<string>('active');
@@ -34,7 +34,7 @@ export default function AuctionsPage() {
     try {
       if (loadMore) setIsLoadingMore(true);
 
-      const result = await BaseCrudService.getAll<Auctions>(
+      const result = await BaseCrudService.getAll<ExoticPetAuctions>(
         'auctions',
         {},
         { limit: LIMIT, skip: loadMore ? skip : 0 }
